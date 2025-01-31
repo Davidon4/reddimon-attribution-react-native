@@ -1,6 +1,6 @@
 {
   "name": "@reddimon/react-native-attribution",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React Native Attribution SDK",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
