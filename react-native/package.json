@@ -22,7 +22,7 @@
     "prepare": "bob build",
     "release": "release-it",
     "build": "bob build",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "keywords": [
     "react-native",
