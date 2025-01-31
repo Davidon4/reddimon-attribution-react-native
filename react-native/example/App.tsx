@@ -1,32 +1,29 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Button, Alert } from 'react-native';
 import Attribution from '@reddimon/react-native-attribution';
 
 export default function App() {
-  useEffect(() => {
-    initializeSDK();
-  }, []);
+  React.useEffect(() => {
+    const initialize = async () => {
+      try {
+        await Attribution.initialize({
+          publisherId: 'test_publisher',
+          appId: 'test_app',
+          baseUrl: 'https://api.reddimon.com',
+          apiKey: 'test_key',
+        });
+      } catch (error) {
+        console.error('Error', 'Failed to initialize SDK');
+      }
+    };
 
-  const initializeSDK = async () => {
-    try {
-      await Attribution.initialize({
-        publisherId: 'test_publisher',
-        appId: 'test_app',
-        baseUrl: 'https://api.reddimon.com',
-        apiKey: 'test_key',
-        enableDebugLogs: true,
-      });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to initialize SDK');
-    }
-  };
+    initialize();
+  }, []);
 
   const trackInstallation = async () => {
     try {
       await Attribution.trackEvent('installation', {
         referrerUrl: 'test_referrer',
-        installTime: Date.now(),
-        campaignId: 'test_campaign',
       });
       Alert.alert('Success', 'Installation tracked');
     } catch (error) {
