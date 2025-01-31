@@ -32,21 +32,11 @@ npm install @reddimon/expo-attribution
 
 ### React Native
 
-javascript
-import { initializeAttribution } from '@reddimon/react-native-attribution';
-// Initialize the SDK
-initializeAttribution({
-// your configuration here
-});
+Check the [React Native SDK Documentation](./react-native/README.md) for more information.
 
 ### Expo
 
-javascript
-import { initializeAttribution } from '@reddimon/expo-attribution';
-// Initialize the SDK
-initializeAttribution({
-// your configuration here
-});
+Check the [Expo SDK Documentation](./expo/README.md) for more information.
 
 ## 📚 Documentation
 
@@ -65,14 +55,12 @@ initializeAttribution({
 
 1. Clone the repository:
 
-bash
 git clone https://github.com/davidon4/reddimon-attribution-react-native.git
 
 cd reddimon-attribution-react-native
 
 2. Install dependencies:
 
-bash
 Install React Native package dependencies
 cd react-native
 npm install
@@ -82,7 +70,6 @@ npm install
 
 ### Building
 
-bash
 Build React Native package
 cd react-native
 npm run build
