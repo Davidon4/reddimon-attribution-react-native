@@ -10,11 +10,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Add debug step
+      - name: Debug - List Files
+        run: |
+          ls -la */package-lock.json
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
           registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: |
+            ./*/package-lock.json
 
       # Publish React Native package
       - name: Install dependencies (React Native)

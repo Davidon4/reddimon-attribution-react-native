@@ -21,6 +21,16 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: |
+            ${{ matrix.package }}/package-lock.json
+
+      # Add a debug step to check files
+      - name: Debug - List Files
+        run: |
+          ls -la ${{ matrix.package }}/package-lock.json
+          echo "Current directory: $(pwd)"
+          echo "Package directory contents:"
+          ls -la ${{ matrix.package }}/
 
       - name: Install dependencies
         working-directory: ./${{ matrix.package }}
