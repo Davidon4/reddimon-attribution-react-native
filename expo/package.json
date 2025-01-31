@@ -1,0 +1,39 @@
+{
+  "name": "@reddimon/expo-attribution",
+  "version": "1.0.2",
+  "description": "Expo Attribution SDK",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "app.plugin": "app.plugin.js",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "attribution",
+    "tracking"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidon4/reddimon-attribution-react-native.git",
+    "directory": "expo"
+  },
+  "homepage": "https://github.com/Davidon4/reddimon-attribution-react-native/tree/main/expo#readme",
+  "author": "Davidon4 <dev@reddimon.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@reddimon/react-native-attribution": "1.0.0"
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "^9.0.14",
+    "expo": "^48.0.0",
+    "expo-module-scripts": "^4.0.3",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

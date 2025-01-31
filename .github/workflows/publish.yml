@@ -1,0 +1,47 @@
+name: Publish to NPM
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
+      # Publish React Native package
+      - name: Install dependencies (React Native)
+        working-directory: ./react-native
+        run: npm ci
+
+      - name: Build React Native package
+        working-directory: ./react-native
+        run: npm run build
+
+      - name: Publish React Native package
+        working-directory: ./react-native
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Publish Expo package
+      - name: Install dependencies (Expo)
+        working-directory: ./expo
+        run: npm ci
+
+      - name: Build Expo package
+        working-directory: ./expo
+        run: npm run build
+
+      - name: Publish Expo package
+        working-directory: ./expo
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

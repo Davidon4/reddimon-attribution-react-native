@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [expo, react-native]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        working-directory: ./${{ matrix.package }}
+        run: npm ci
+
+      - name: Build
+        working-directory: ./${{ matrix.package }}
+        run: npm run build
+
+      # For react-native package
+      - name: Run tests
+        if: matrix.package == 'react-native'
+        working-directory: ./react-native
+        run: npm test
+
+      # For type checking
+      - name: Type check
+        working-directory: ./${{ matrix.package }}
+        run: npm run typescript
+
+      # Optional: Lint check
+      - name: Lint
+        if: matrix.package == 'react-native'
+        working-directory: ./react-native
+        run: npm run lint
