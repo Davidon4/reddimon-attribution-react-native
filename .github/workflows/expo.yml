@@ -1,0 +1,32 @@
+name: Expo
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "expo/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+          cache-dependency-path: "expo/package-lock.json"
+
+      - name: Install & Build
+        run: |
+          cd expo
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd expo
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

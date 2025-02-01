@@ -1,0 +1,32 @@
+name: React Native CLI
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "react-native/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+          cache-dependency-path: "react-native/package-lock.json"
+
+      - name: Install & Build
+        run: |
+          cd react-native
+          npm install --force
+          npm run build
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd react-native
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

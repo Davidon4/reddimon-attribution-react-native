@@ -1,11 +1,13 @@
-name: Publish
+name: Publish NPM Packages
 on:
   push:
     tags:
-      - "v*"
+      - "v*-rn" # For React Native package
+      - "v*-expo" # For Expo package
 
 jobs:
-  publish:
+  publish-rn:
+    if: contains(github.ref, '-rn')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -14,20 +16,30 @@ jobs:
           node-version: 18.x
           registry-url: "https://registry.npmjs.org"
 
-      # React Native CLI Package
-      - name: Publish RN CLI Package
+      - name: Publish React Native Package
         run: |
           cd react-native
           npm install --force
+          npm run build
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      # Expo Package
+  publish-expo:
+    if: contains(github.ref, '-expo')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: "https://registry.npmjs.org"
+
       - name: Publish Expo Package
         run: |
           cd expo
           npm install --legacy-peer-deps
+          npm run build
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
