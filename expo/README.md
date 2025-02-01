@@ -89,60 +89,130 @@ osVersion: Platform.Version
 
 ### 3. Track Subscriptions
 
-typescript
-// After successful purchase/subscription
-await Attribution.trackEvent('subscription', {
-subscriptionId: 'sub_123',
-planType: 'premium',
-amount: 9.99,
-currency: 'USD',
-platform: Platform.OS,
-osVersion: Platform.Version
-});
+```typescript
+// After successful purchase/subscription, track it with Attribution
+const handleSubscriptionSuccess = async (purchaseData: {
+  subscriptionId: string;
+  planType: string;
+  amount: number;
+  currency: string;
+}) => {
+  try {
+    // Track subscription event - this will:
+    // 1. Attribute the subscription to the creator's link
+    // 2. Send subscription data to your dashboard
+    // 3. Update creator's conversion metrics
+    await Attribution.trackEvent("subscription", {
+      subscriptionId: purchaseData.subscriptionId,
+      planType: purchaseData.planType,
+      amount: purchaseData.amount,
+      currency: purchaseData.currency,
+      platform: Platform.OS,
+      osVersion: Platform.Version,
+    });
+  } catch (error) {
+    console.error("Failed to track subscription:", error);
+  }
+};
+```
 
 ## Payment Provider Examples
 
 ### In-App Purchases
 
-typescript
-import as InAppPurchases from 'expo-in-app-purchases';
+import \* as InAppPurchases from 'expo-in-app-purchases';
+import Attribution from '@reddimon/expo-attribution';
+import { Platform } from 'react-native';
+
 const handlePurchase = async () => {
+try {
 const { responseCode, results } = await InAppPurchases.purchaseItemAsync('premium_sub');
 if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+// Track subscription with Attribution SDK
 await Attribution.trackEvent('subscription', {
 subscriptionId: results[0].orderId,
-// ... other details
+planType: 'premium',
+amount: results[0].price,
+currency: results[0].currency,
+platform: Platform.OS,
+osVersion: Platform.Version
 });
+}
+} catch (error) {
+console.error('Purchase failed:', error);
 }
 };
 
 ### Stripe
 
-typescript
 import { useStripe } from '@stripe/stripe-react-native';
-const handleStripePayment = async () => {
-const { paymentIntent } = await stripe.initPaymentSheet({
-paymentIntentClientSecret: 'xxx'
+import Attribution from '@reddimon/expo-attribution';
+import { Platform } from 'react-native';
+
+const handleStripeSubscription = async () => {
+const stripe = useStripe();
+try {
+const { paymentIntent, error } = await stripe.initPaymentSheet({
+paymentIntentClientSecret: 'your_client_secret'
 });
-if (paymentIntent) {
-await Attribution.trackEvent('subscription', {
-subscriptionId: paymentIntent.id,
-// ... other details
-});
+
+    if (error) throw error;
+
+    const { error: presentError } = await stripe.presentPaymentSheet();
+
+    if (!presentError && paymentIntent) {
+      // Track subscription with Attribution SDK
+      await Attribution.trackEvent('subscription', {
+        subscriptionId: paymentIntent.id,
+        planType: 'premium',
+        amount: paymentIntent.amount / 100, // Convert from cents to dollars
+        currency: paymentIntent.currency.toUpperCase(),
+        platform: Platform.OS,
+        osVersion: Platform.Version
+      });
+    }
+
+} catch (error) {
+console.error('Stripe subscription failed:', error);
 }
 };
 
 ### RevenueCat
 
-typescript
 import Purchases from 'react-native-purchases';
+import Attribution from '@reddimon/expo-attribution';
+import { Platform } from 'react-native';
+
 const handleRevenueCatPurchase = async () => {
-const purchase = await Purchases.purchasePackage(package);
-if (purchase.customerInfo.entitlements.active.premium) {
-await Attribution.trackEvent('subscription', {
-subscriptionId: purchase.customerInfo.originalAppUserId,
-// ... other details
-});
+try {
+const subscriptionPackage = {
+identifier: 'premium_monthly',
+packageType: 'MONTHLY',
+product: {
+identifier: 'premium_monthly',
+price: 9.99,
+currencyCode: 'USD'
+},
+offeringIdentifier: 'default',
+presentedOfferingContext: null
+};
+
+    const purchaseResult = await Purchases.purchasePackage(subscriptionPackage);
+
+    if (purchaseResult.customerInfo.entitlements.active.premium) {
+      // Track subscription with Attribution SDK
+      await Attribution.trackEvent('subscription', {
+        subscriptionId: purchaseResult.customerInfo.originalAppUserId,
+        planType: 'premium',
+        amount: subscriptionPackage.product.price,
+        currency: subscriptionPackage.product.currencyCode,
+        platform: Platform.OS,
+        osVersion: Platform.Version
+      });
+    }
+
+} catch (error) {
+console.error('RevenueCat purchase failed:', error);
 }
 };
 

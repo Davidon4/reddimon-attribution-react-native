@@ -178,77 +178,100 @@ Here are examples for different payment providers:
 
 #### Stripe
 
-typescript
-// After successful Stripe subscription
+import { useStripe } from '@stripe/stripe-react-native';
+import Attribution from '@reddimon/react-native-attribution';
+import { Platform } from 'react-native';
+
 const handleStripeSubscription = async () => {
+const stripe = useStripe();
 try {
-// Create Stripe subscription
-const stripeResult = await stripe.createSubscription({
-priceId: 'price_123',
-// ... other Stripe options
+const { paymentIntent, error } = await stripe.initPaymentSheet({
+paymentIntentClientSecret: 'your_client_secret'
 });
-// Track attribution if subscription is active
-if (stripeResult.status === 'active') {
-await Attribution.trackEvent('subscription', {
-subscriptionId: stripeResult.id,
-planType: stripeResult.plan.nickname,
-amount: stripeResult.plan.amount / 100, // Stripe uses cents
-currency: stripeResult.plan.currency,
-platform: Platform.OS,
-osVersion: Platform.Version
-});
-}
+
+    if (error) throw error;
+
+    const { error: presentError } = await stripe.presentPaymentSheet();
+
+    if (!presentError && paymentIntent) {
+      // Track subscription with Attribution SDK
+      await Attribution.trackEvent('subscription', {
+        subscriptionId: paymentIntent.id,
+        planType: 'premium',
+        amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency.toUpperCase(),
+        platform: Platform.OS,
+        osVersion: Platform.Version
+      });
+    }
+
 } catch (error) {
-console.error('Subscription failed:', error);
+console.error('Stripe subscription failed:', error);
 }
 };
 
 #### RevenueCat
 
-typescript
-// After successful RevenueCat purchase
+import Purchases from 'react-native-purchases';
+import Attribution from '@reddimon/react-native-attribution';
+import { Platform } from 'react-native';
+
 const handleRevenueCatPurchase = async () => {
 try {
-const purchaseResult = await Purchases.purchasePackage(package);
+const subscriptionPackage = {
+identifier: 'premium_monthly',
+packageType: 'MONTHLY',
+product: {
+identifier: 'premium_monthly',
+price: 9.99,
+currencyCode: 'USD'
+},
+offeringIdentifier: 'default',
+presentedOfferingContext: null
+};
 
-      if (purchaseResult.customerInfo.entitlements.active.premium) {
-        await Attribution.trackEvent('subscription', {
-          subscriptionId: purchaseResult.customerInfo.originalAppUserId,
-          planType: 'premium',
-          amount: package.product.price,
-          currency: package.product.currencyCode,
-          platform: Platform.OS,
-          osVersion: Platform.Version
-        });
-      }
-    } catch (error) {
-      console.error('RevenueCat purchase failed:', error);
+    const purchaseResult = await Purchases.purchasePackage(subscriptionPackage);
+
+    if (purchaseResult.customerInfo.entitlements.active.premium) {
+      // Track subscription with Attribution SDK
+      await Attribution.trackEvent('subscription', {
+        subscriptionId: purchaseResult.customerInfo.originalAppUserId,
+        planType: 'premium',
+        amount: subscriptionPackage.product.price,
+        currency: subscriptionPackage.product.currencyCode,
+        platform: Platform.OS,
+        osVersion: Platform.Version
+      });
     }
 
+} catch (error) {
+console.error('RevenueCat purchase failed:', error);
+}
 };
 
 #### In-App Purchases
 
-typescript
-// After successful IAP
-const handleIAPPurchase = async () => {
+import RNIap from 'react-native-iap';
+import Attribution from '@reddimon/react-native-attribution';
+import { Platform } from 'react-native';
+
+const handlePurchase = async () => {
 try {
 const purchase = await RNIap.requestPurchase('premium_sub');
-
-      if (purchase.status === 'PURCHASED') {
-        await Attribution.trackEvent('subscription', {
-          subscriptionId: purchase.productId,
-          planType: 'premium',
-          amount: purchase.price,
-          currency: purchase.currency,
-          platform: Platform.OS,
-          osVersion: Platform.Version
-        });
-      }
-    } catch (error) {
-      console.error('Purchase failed:', error);
-    }
-
+if (purchase.purchaseStateAndroid === 'PURCHASED' || purchase.transactionReceipt) {
+// Track subscription with Attribution SDK
+await Attribution.trackEvent('subscription', {
+subscriptionId: purchase.transactionId,
+planType: 'premium',
+amount: purchase.price,
+currency: purchase.currency,
+platform: Platform.OS,
+osVersion: Platform.Version
+});
+}
+} catch (error) {
+console.error('Purchase failed:', error);
+}
 };
 
 The SDK works with any payment provider - just call `trackEvent` after a successful subscription with the relevant details.
