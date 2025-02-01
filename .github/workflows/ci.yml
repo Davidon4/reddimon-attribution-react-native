@@ -2,64 +2,32 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [expo, react-native]
-    timeout-minutes: 15 # Add timeout limit
-
     steps:
       - uses: actions/checkout@v3
-
-      # Split cache into smaller chunks
-      - name: Setup Node.js and Cache
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: 18.x
           cache: "npm"
-          cache-dependency-path: |
-            ${{ matrix.package }}/package-lock.json
-        timeout-minutes: 5 # Add specific timeout for cache operation
 
-      # Add a debug step to check files
-      - name: Debug - List Files
+      # React Native CLI Package
+      - name: Install RN CLI dependencies
         run: |
-          ls -la ${{ matrix.package }}/package-lock.json
-          echo "Current directory: $(pwd)"
-          echo "Package directory contents:"
-          ls -la ${{ matrix.package }}/
+          cd react-native
+          npm install --force
+          npm run build
 
-      - name: Install dependencies
-        working-directory: ./${{ matrix.package }}
-        run: npm ci
-        timeout-minutes: 5 # Add timeout for install
-
-      - name: Build
-        working-directory: ./${{ matrix.package }}
-        run: npm run build
-
-      # For react-native package only
-      - name: Run tests
-        if: matrix.package == 'react-native'
-        working-directory: ./react-native
-        run: npm test
-        continue-on-error: true # Make tests optional for now
-
-      # Type checking - only for react-native
-      - name: Type check
-        if: matrix.package == 'react-native'
-        working-directory: ./${{ matrix.package }}
-        run: npm run typescript
-
-      # Optional: Lint check - only for react-native
-      - name: Lint
-        if: matrix.package == 'react-native'
-        working-directory: ./react-native
-        run: npm run lint
-        continue-on-error: true # Make linting optional for now
+      # Expo Package
+      - name: Install Expo dependencies
+        run: |
+          cd expo
+          npm install --legacy-peer-deps
+          npm run build

@@ -1,58 +1,33 @@
-name: Publish to NPM
-
+name: Publish
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      # Add debug step
-      - name: Debug - List Files
-        run: |
-          ls -la */package-lock.json
-          echo "Current directory: $(pwd)"
-          echo "Directory contents:"
-          ls -la
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: 18.x
           registry-url: "https://registry.npmjs.org"
-          cache: "npm"
-          cache-dependency-path: |
-            ./*/package-lock.json
 
-      # Publish React Native package
-      - name: Install dependencies (React Native)
-        working-directory: ./react-native
-        run: npm ci
-
-      - name: Build React Native package
-        working-directory: ./react-native
-        run: npm run build
-
-      - name: Publish React Native package
-        working-directory: ./react-native
-        run: npm publish --access public
+      # React Native CLI Package
+      - name: Publish RN CLI Package
+        run: |
+          cd react-native
+          npm install --force
+          npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      # Publish Expo package
-      - name: Install dependencies (Expo)
-        working-directory: ./expo
-        run: npm ci
-
-      - name: Build Expo package
-        working-directory: ./expo
-        run: npm run build
-
-      - name: Publish Expo package
-        working-directory: ./expo
-        run: npm publish --access public
+      # Expo Package
+      - name: Publish Expo Package
+        run: |
+          cd expo
+          npm install --legacy-peer-deps
+          npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
