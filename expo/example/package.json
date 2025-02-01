@@ -5,6 +5,8 @@
     "expo": "^49.0.0",
     "expo-in-app-purchases": "^14.0.0",
     "expo-linking": "^5.0.0",
+    "react": "18.2.0",
+    "react-native": "0.72.0",
     "react-native-purchases": "^8.5.2"
   },
   "devDependencies": {
