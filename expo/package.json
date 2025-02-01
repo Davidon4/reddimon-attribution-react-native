@@ -23,18 +23,21 @@
     "directory": "expo"
   },
   "homepage": "https://github.com/Davidon4/reddimon-attribution-react-native/tree/main/expo#readme",
-  "author": "Davidon4 <dev@reddimon.com>",
+  "author": "Davidon4 <juggernaut.dev1@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@reddimon/react-native-attribution": "1.0.3"
   },
   "devDependencies": {
     "@expo/config-plugins": "^9.0.14",
-    "expo": "^48.0.0",
+    "expo": ">=48.0.0",
     "expo-module-scripts": "^4.0.3",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "expo": "*"
+    "expo": ">=48.0.0",
+    "expo-linking": ">=5.0.0",
+    "@stripe/stripe-react-native": ">=0.35.0",
+    "expo-in-app-purchases": ">=14.0.0"
   }
 }

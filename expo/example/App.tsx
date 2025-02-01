@@ -1,98 +1,51 @@
 import React from 'react';
-import { View, Button, Alert, Platform } from 'react-native';
+import { View, Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 import Attribution from '@reddimon/expo-attribution';
 
 export default function App() {
   React.useEffect(() => {
     const initialize = async () => {
       try {
+        // 1. SDK is ready
         await Attribution.initialize({
-          publisherId: 'test_publisher',
-          appId: 'test_app',
-          baseUrl: 'https://api.reddimon.com',
-          apiKey: 'test_key',
-          enableDebugLogs: true,
-          security: {
-            enableFraudPrevention: true,
-            deviceFingerprinting: true,
-            ipTracking: true,
-            validateSignature: true,
-          },
-          tracking: {
-            sessionTimeout: 30, // minutes
-            enableOfflineCache: true,
-            maxRetries: 3,
-            retryDelay: 1000, // ms
-            userValueTracking: true,
-          }
+          publisherId: 'YOUR_PUBLISHER_ID', // From Reddimon dashboard
+          appId: 'com.yourapp.id', // ID for single platform
+          apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
+          baseUrl: 'https://reddimon.com'
+        });
+
+        // 2. Handle initial deep link (app installation)
+        const initialUrl = await Linking.getInitialUrl();
+        if (initialUrl) {
+          handleDeepLink(initialUrl);
+        }
+
+        // 3. Listen for future deep links
+        Linking.addEventListener('url', (event: { url: string }) => {
+          handleDeepLink(event.url);
         });
       } catch (error) {
-        console.error('Error', 'Failed to initialize SDK');
+        console.error('Failed to initialize SDK:', error);
       }
     };
 
     initialize();
   }, []);
 
-  const trackInstallation = async () => {
-    try {
-      await Attribution.trackEvent('installation', {
-        referrerUrl: 'test_referrer',
-        installTime: Date.now(),
-        campaignId: 'test_campaign',
-        creatorId: 'creator123',
-        source: 'direct_link',
-        deviceInfo: {
-          deviceId: await Attribution.getDeviceId(),
-          fingerprint: await Attribution.getDeviceFingerprint(),
-          ip: await Attribution.getIpAddress(),
-          platform: Platform.OS,
-          model: Platform.select({ ios: 'iPhone', android: 'Android' }),
-          osVersion: Platform.Version,
-        },
-        sessionId: await Attribution.getCurrentSession(),
-        metadata: {
-          device: 'ios',
-          platform: 'appstore',
-          isEmulator: await Attribution.isEmulator(),
-          isVPN: await Attribution.isVPNConnection(),
-          isProxy: await Attribution.isProxyConnection(),
-        }
+  const handleDeepLink = async (url: string) => {
+    if (url) {
+      await Attribution.trackEvent('installation', { 
+        url,
+        platform: Platform.OS,
+        osVersion: Platform.Version
       });
-      Alert.alert('Success', 'Installation attributed to creator');
-    } catch (error) {
-      // Events are automatically cached offline if network fails
-      Alert.alert('Error', 'Failed to track installation - will retry automatically');
-    }
-  };
-
-  const trackSubscription = async () => {
-    try {
-      await Attribution.trackEvent('subscription', {
-        referrerUrl: 'test_referrer',
-        creatorId: 'creator123',
-        subscriptionId: 'sub_123',
-        planType: 'premium',
-        amount: 9.99,
-        currency: 'USD',
-        userValue: {
-          lifetimeValue: 99.99,
-          subscriptionMonths: 6,
-          purchaseHistory: ['sub_122', 'sub_121'],
-        },
-        deviceInfo: await Attribution.getDeviceInfo(),
-        sessionId: await Attribution.getCurrentSession(),
-      });
-      Alert.alert('Success', 'Subscription attributed to creator');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to track subscription - will retry automatically');
     }
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Button title="Track Installation" onPress={trackInstallation} />
-      <Button title="Track Subscription" onPress={trackSubscription} />
+    <View style={{ flex: 1 }}>
+      {/* Your app content */}
     </View>
   );
 } 

@@ -1,0 +1,16 @@
+<!-- 1. Add Associated Domains -->
+<key>com.apple.developer.associated-domains</key>
+<array>
+    <string>applinks:reddimon.com</string>
+</array>
+
+<!-- 2. Add URL Scheme -->
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>yourapp</string>
+        </array>
+    </dict>
+</array>

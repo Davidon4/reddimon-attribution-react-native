@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "scheme": "yourapp",
+    "android": {
+      "package": "com.yourapp.id",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "reddimon.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.yourapp.id",
+      "associatedDomains": ["applinks:reddimon.com"]
+    }
+  }
+} 

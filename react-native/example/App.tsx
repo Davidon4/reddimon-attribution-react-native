@@ -12,7 +12,7 @@ export default function App() {
         publisherId: 'YOUR_PUBLISHER_ID', // From Reddimon dashboard
         appId: 'com.yourapp.id', // ID for single platform
         apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
-        baseUrl: 'https://api.reddimon.com'
+        baseUrl: 'https://reddimon.com'
       });
 
       if (Platform.OS === 'ios') {

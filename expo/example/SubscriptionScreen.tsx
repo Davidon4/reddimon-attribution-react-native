@@ -1,12 +1,37 @@
 import React from 'react';
 import { View, Button, Platform } from 'react-native';
-import Attribution from '@reddimon/react-native-attribution';
-import { useStripe } from '@stripe/stripe-react-native';  // Better for React Native
-import RNIap from 'react-native-iap';
-import Purchases from 'react-native-purchases';
+import Attribution from '@reddimon/expo-attribution';
+import { useStripe } from '@stripe/stripe-react-native';  // Expo Stripe
+import * as InAppPurchases from 'expo-in-app-purchases'; // Expo IAP
+import Purchases from 'react-native-purchases';  // RevenueCat
 
 export function SubscriptionScreen() {
   const stripe = useStripe();
+
+  // For In-App Purchases using Expo
+  const handleExpoPurchase = async () => {
+    try {
+      // Connect to store
+      await InAppPurchases.connectAsync();
+      
+      // Purchase
+      const { responseCode, results } = await InAppPurchases.purchaseItemAsync('premium_sub');
+      
+      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+        const purchase = results[0];
+        await Attribution.trackEvent('subscription', {
+          subscriptionId: purchase.orderId,
+          planType: 'premium',
+          amount: purchase.price,
+          currency: purchase.currency,
+          platform: Platform.OS,
+          osVersion: Platform.Version
+        });
+      }
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    }
+  };
 
   // For RevenueCat
   const handleRevenueCatPurchase = async () => {
@@ -28,37 +53,15 @@ export function SubscriptionScreen() {
     }
   };
 
-  // For In-App Purchases (both platforms)
-  const handleIAPPurchase = async () => {
-    try {
-      const purchase = await RNIap.requestPurchase('premium_sub');
-      
-      if (purchase.status === 'PURCHASED') {
-        await Attribution.trackEvent('subscription', {
-          subscriptionId: purchase.productId,
-          planType: 'premium',
-          amount: purchase.price,
-          currency: purchase.currency,
-          platform: Platform.OS,
-          osVersion: Platform.Version
-        });
-      }
-    } catch (error) {
-      console.error('Purchase failed:', error);
-    }
-  };
-
   // For Stripe
   const handleStripeSubscription = async () => {
     try {
-      // Initialize payment sheet
       const { paymentIntent, error } = await stripe.initPaymentSheet({
         paymentIntentClientSecret: 'your_client_secret',
       });
       
       if (error) throw error;
       
-      // Present the payment sheet
       const { error: presentError } = await stripe.presentPaymentSheet();
       
       if (!presentError) {
@@ -78,9 +81,9 @@ export function SubscriptionScreen() {
 
   return (
     <View>
-      <Button title="Subscribe with Stripe" onPress={handleStripeSubscription} />
-      <Button title="Subscribe with IAP" onPress={handleIAPPurchase} />
+      <Button title="Subscribe with IAP" onPress={handleExpoPurchase} />
       <Button title="Subscribe with RevenueCat" onPress={handleRevenueCatPurchase} />
+      <Button title="Subscribe with Stripe" onPress={handleStripeSubscription} />
     </View>
   );
 } 
