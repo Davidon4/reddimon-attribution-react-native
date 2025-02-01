@@ -13,12 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      # React Native CLI Package
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
           cache: "npm"
+          cache-dependency-path: "react-native/package-lock.json"
 
-      # React Native CLI Package
       - name: Install RN CLI dependencies
         run: |
           cd react-native
@@ -26,6 +28,12 @@ jobs:
           npm run build
 
       # Expo Package
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+          cache-dependency-path: "expo/package-lock.json"
+
       - name: Install Expo dependencies
         run: |
           cd expo
