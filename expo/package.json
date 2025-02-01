@@ -1,6 +1,6 @@
 {
   "name": "@reddimon/expo-attribution",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Expo Attribution SDK",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -26,7 +26,7 @@
   "author": "Davidon4 <juggernaut.dev1@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@reddimon/react-native-attribution": "1.0.3"
+    "@reddimon/react-native-attribution": "1.0.9"
   },
   "devDependencies": {
     "@expo/config-plugins": "^9.0.14",
