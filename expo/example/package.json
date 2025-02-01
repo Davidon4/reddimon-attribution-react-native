@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@reddimon/expo-attribution": "file:../",
+    "@stripe/stripe-react-native": "^0.35.0",
+    "expo": "^49.0.0",
+    "expo-in-app-purchases": "^14.0.0",
+    "expo-linking": "^5.0.0",
+    "react-native-purchases": "^8.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/stripe-v3": "^3.1.29",
+    "typescript": "^5.0.0"
+  }
+}

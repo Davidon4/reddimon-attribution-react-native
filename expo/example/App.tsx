@@ -16,7 +16,7 @@ export default function App() {
         });
 
         // 2. Handle initial deep link (app installation)
-        const initialUrl = await Linking.getInitialUrl();
+        const initialUrl = await Linking.getInitialURL();
         if (initialUrl) {
           handleDeepLink(initialUrl);
         }
