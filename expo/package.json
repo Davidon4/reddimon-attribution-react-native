@@ -1,6 +1,6 @@
 {
   "name": "@reddimon/expo-attribution",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Expo Attribution SDK",
   "main": "build/index.js",
   "types": "build/index.d.ts",
