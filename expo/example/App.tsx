@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import Attribution from '@reddimon/expo-attribution';
+import * as Location from 'expo-location';
 
 export default function App() {
   React.useEffect(() => {
@@ -9,9 +10,8 @@ export default function App() {
       try {
         // 1. SDK is ready
         await Attribution.initialize({
-          publisherId: 'YOUR_PUBLISHER_ID', // From Reddimon dashboard
-          appId: 'com.yourapp.id', // ID for single platform
           apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
+          appId: 'com.yourapp.id', // ID for single platform
           baseUrl: 'https://reddimon.com'
         });
 
@@ -36,10 +36,43 @@ export default function App() {
   const handleDeepLink = async (url: string) => {
     if (url) {
       await Attribution.trackEvent('installation', { 
-        url,
+        atrributionUrl: url,
         platform: Platform.OS,
-        osVersion: Platform.Version
+        installSource: Platform.OS === 'ios' ? 'App Store' : 'Play Store',
+        installDate: new Date().toISOString(),
+        ...await getLocationData()
       });
+    }
+  };
+
+  const getLocationData = async (): Promise<{
+    country: string | null;
+    region: string | null;
+    city: string | null;
+  }> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        return {
+          country: null,
+          region: null,
+          city: null
+        };
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      return {
+        country: null,  // Backend will handle geocoding
+        region: null,
+        city: null
+      };
+    } catch (error) {
+      console.error('Location error:', error);
+      return {
+        country: null,
+        region: null,
+        city: null
+      };
     }
   };
 

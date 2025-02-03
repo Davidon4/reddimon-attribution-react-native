@@ -1,24 +1,45 @@
 {
   "expo": {
+    "name": "Your App",
     "scheme": "yourapp",
-    "android": {
-      "package": "com.yourapp.id",
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "data": [
-            {
-              "scheme": "https",
-              "host": "reddimon.com"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
+    "plugins": [
+      ["expo-linking", {
+        "schemes": ["yourapp"]
+      }],
+      ["expo-location", {
+        "locationAlwaysAndWhenInUsePermission": "We need your location for attribution tracking"
+      }],
+      ["react-native-purchases", {
+        "ios": {
+          "apiKey": "YOUR_REVENUECAT_IOS_KEY"
+        },
+        "android": {
+          "apiKey": "YOUR_REVENUECAT_ANDROID_KEY"
         }
-      ]
-    },
+      }],
+      ["@stripe/stripe-react-native", {
+        "merchantIdentifier": "YOUR_MERCHANT_ID",
+        "enableGooglePay": true
+      }],
+      "react-native-iap"
+    ],
     "ios": {
       "bundleIdentifier": "com.yourapp.id",
-      "associatedDomains": ["applinks:reddimon.com"]
+      "associatedDomains": ["applinks:reddimon.com"],
+      "usesIAP": true
+    },
+    "android": {
+      "package": "com.yourapp.id",
+      "permissions": ["com.android.vending.BILLING"],
+      "intentFilters": [{
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [{
+          "scheme": "https",
+          "host": "reddimon.com"
+        }],
+        "category": ["BROWSABLE", "DEFAULT"]
+      }]
     }
   }
-} 
+}

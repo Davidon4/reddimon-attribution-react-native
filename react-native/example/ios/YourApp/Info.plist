@@ -3,6 +3,22 @@
 <array>
     <string>applinks:reddimon.com</string>
 </array>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location for attribution tracking</string>
+<!-- For In-App Purchases -->
+<key>SKPaymentTransactions</key>
+<true/>
+
+<!-- For Stripe -->
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+
+<!-- For RevenueCat -->
+<key>RevenueCatApiKey</key>
+<string>YOUR_REVENUECAT_IOS_KEY</string>
 
 <!-- 2. Add URL Scheme -->
 <key>CFBundleURLTypes</key>

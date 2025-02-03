@@ -18,7 +18,6 @@ const AttributionModule = NativeModules.AttributionModule
     );
 
 export interface AttributionConfig {
-  publisherId: string;
   appId: string;
   baseUrl: string;
   apiKey: string;

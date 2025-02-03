@@ -1,15 +1,14 @@
 // Make sure to check the README.md for more setup information
-
 import React from 'react';
 import { View, Platform, Linking } from 'react-native';
 import Attribution from '@reddimon/react-native-attribution';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function App() {
   // Initialize SDK when app starts
   React.useEffect(() => {
     const initialize = async () => {
       await Attribution.initialize({
-        publisherId: 'YOUR_PUBLISHER_ID', // From Reddimon dashboard
         appId: 'com.yourapp.id', // ID for single platform
         apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
         baseUrl: 'https://reddimon.com'
@@ -59,12 +58,40 @@ export default function App() {
 
   const handleDeepLink = async (url: string) => {
     if (url) {
-      await Attribution.trackEvent('installation', { 
-        url,
-        platform: Platform.OS,
-        osVersion: Platform.Version
-      });
+        await Attribution.trackEvent('installation', { 
+          attributionUrl: url,
+          platform: Platform.OS,
+          installSource: Platform.OS === 'ios' ? 'App Store' : 'Play Store',
+          installDate: new Date().toISOString(),
+          ...await getLocationData(),
+        });
     }
+  };
+
+  const getLocationData = async (): Promise<{
+    country: string | null;
+    region: string | null;
+    city: string | null;
+  }> => {
+    return new Promise((resolve) => {
+      Geolocation.getCurrentPosition(
+        (_position) => {
+          resolve({
+            country: null,
+            region: null,
+            city: null
+          });
+        },
+        (error) => {
+          console.log('Location error:', error);
+          resolve({
+            country: null,
+            region: null,
+            city: null
+          });
+        }
+      );
+    });
   };
 
   return (

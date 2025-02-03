@@ -16,6 +16,7 @@ jobs:
           node-version: 18.x
           cache: "npm"
           cache-dependency-path: "expo/package-lock.json"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install & Build
         run: |
@@ -24,7 +25,7 @@ jobs:
           npm run build
 
       - name: Publish
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main'
         run: |
           cd expo
           npm publish --access public

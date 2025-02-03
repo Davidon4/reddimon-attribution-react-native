@@ -17,6 +17,12 @@ npm install @reddimon/react-native-attribution
 or
 yarn add @reddimon/react-native-attribution
 
+# For iOS
+
+cd ios && pod install && cd ..
+
+````
+
 ## Platform Setup
 
 ### iOS Configuration
@@ -34,10 +40,10 @@ yarn add @reddimon/react-native-attribution
    - Select your target
    - Go to "Signing & Capabilities"
    - Click "+" and add "Associated Domains"
-   - Add domain: `applinks:redd.im`
+   - Add domain: `applinks:reddimon.com`
 
 3. **Update Info.plist**:
-   xml
+   ```xml
    <!-- Custom URL Scheme -->
    <key>CFBundleURLTypes</key>
    <array>
@@ -53,25 +59,71 @@ yarn add @reddimon/react-native-attribution
    <!-- Universal Links -->
    <key>com.apple.developer.associated-domains</key>
    <array>
-   <string>applinks:redd.im</string>
+   <string>applinks:reddimon.com</string>
    </array>
+  <!-- Location Permission -->
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>We need your location for attribution tracking</string>
+````
+
+## Payment Configuration
+
+### iOS Configuration (Info.plist)
+
+```xml
+<!-- For In-App Purchases -->
+<key>SKPaymentTransactions</key>
+<true/>
+
+<!-- For Stripe -->
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+
+<!-- For RevenueCat -->
+<key>RevenueCatApiKey</key>
+<string>YOUR_REVENUECAT_IOS_KEY</string>
+```
 
 ### Android Configuration
 
 Add to `android/app/src/main/AndroidManifest.xml`:
-xml
-<activity>
-<intent-filter>
-<action android:name="android.intent.action.VIEW" />
-<category android:name="android.intent.category.DEFAULT" />
-<category android:name="android.intent.category.BROWSABLE" />
-<data android:scheme="yourapp" />
 
-<!-- Handle attribution links -->
-<data android:scheme="https" android:host="redd.im" />
-</intent-filter>
-</activity>
-<uses-permission android:name="android.permission.INTERNET" />
+```xml
+<manifest>
+    <!-- Required Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- For In-App Purchases -->
+<uses-permission android:name="com.android.vending.BILLING" />
+
+<!-- For Stripe -->
+<meta-data
+    android:name="com.stripe.publishableKey"
+    android:value="pk_live_YOUR_STRIPE_KEY" />
+
+<!-- For RevenueCat -->
+<meta-data
+    android:name="com.revenuecat.api_key"
+    android:value="YOUR_REVENUECAT_ANDROID_KEY" />
+
+    <application>
+        <activity>
+            <!-- App Links -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="reddimon.com" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+```
 
 ## Usage
 
@@ -85,10 +137,12 @@ First, get your credentials from the Reddimon dashboard:
 
 Then initialize the SDK in your App.tsx:
 
+```
 typescript
 import React from 'react';
 import { Platform, Linking } from 'react-native';
 import Attribution from '@reddimon/react-native-attribution';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function App() {
 React.useEffect(() => {
@@ -96,7 +150,6 @@ const initialize = async () => {
 
 // 1. Initialize SDK with your credentials
 await Attribution.initialize({
-publisherId: 'YOUR_PUBLISHER_ID', // From Reddimon dashboard
 appId: '0123456789', // ID for single platform
 apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
 baseUrl: 'https://api.reddimon.com'
@@ -144,25 +197,61 @@ const initialUrl = await Linking.getInitialURL();
 if (initialUrl) {
 handleDeepLink(initialUrl);
 }
-const listener = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
-return () => listener.remove();
-}
-};
-initialize();
+
+      const listener = Linking.addEventListener('url', ({ url }) => {
+        handleDeepLink(url);
+      });
+
+      return () => listener.remove();
+    };
+
+    initialize();
+
 }, []);
 
 const handleDeepLink = async (url: string) => {
 if (url) {
-await Attribution.trackEvent('installation', { url,
+await Attribution.trackEvent('installation', {
+attributionUrl: url,
 platform: Platform.OS,
-osVersion: Platform.Version
+installSource: Platform.OS === 'ios' ? 'App Store' : 'Play Store',
+installDate: new Date().toISOString(),
+...await getLocationData()
 });
 }
 };
+
+const getLocationData = async (): Promise<{
+country: string | null;
+region: string | null;
+city: string | null;
+}> => {
+return new Promise((resolve) => {
+Geolocation.getCurrentPosition(
+(\_position) => {
+resolve({
+country: null,
+region: null,
+city: null
+});
+},
+(error) => {
+console.log('Location error:', error);
+resolve({
+country: null,
+region: null,
+city: null
+});
+}
+);
+});
+};
+
 return (
-// Your app content
+<View style={{ flex: 1, justifyContent: 'center' }} />
 );
 }
+```
 
 ### Important Notes:
 
@@ -172,107 +261,140 @@ return (
 - Using the same ID for both platforms is recommended when possible
 - If you're using multiple platforms, make sure to set up the correct appId for each platform
 
-## 3. Track Subscriptions
+## Tracking Subscriptions
 
-Here are examples for different payment providers:
+### 1. RevenueCat Integration
 
-#### Stripe
+```typescript
+// Initial subscription
+const handleRevenueCatPurchase = async (packageItem: any) => {
+  try {
+    const { customerInfo } = await Purchases.purchasePackage(packageItem);
 
-import { useStripe } from '@stripe/stripe-react-native';
-import Attribution from '@reddimon/react-native-attribution';
-import { Platform } from 'react-native';
+    await Attribution.trackEvent("subscription", {
+      subscriptionId: customerInfo.originalPurchaseDate,
+      planType: packageItem.identifier,
+      amount: packageItem.product.price,
+      currency: packageItem.product.currencyCode,
+      interval: packageItem.product.subscriptionPeriod,
+      subscriptionDate: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Purchase error:", error);
+  }
+};
 
-const handleStripeSubscription = async () => {
-const stripe = useStripe();
-try {
-const { paymentIntent, error } = await stripe.initPaymentSheet({
-paymentIntentClientSecret: 'your_client_secret'
+// Status changes
+Purchases.addCustomerInfoUpdateListener((info) => {
+  if (info.activeSubscriptions.length === 0) {
+    handleSubscriptionChange(info.latestExpirationDate, "cancelled");
+  }
 });
+```
 
-    if (error) throw error;
+### 2. Stripe Integration
 
-    const { error: presentError } = await stripe.presentPaymentSheet();
-
-    if (!presentError && paymentIntent) {
-      // Track subscription with Attribution SDK
-      await Attribution.trackEvent('subscription', {
-        subscriptionId: paymentIntent.id,
-        planType: 'premium',
-        amount: paymentIntent.amount / 100,
-        currency: paymentIntent.currency.toUpperCase(),
-        platform: Platform.OS,
-        osVersion: Platform.Version
-      });
-    }
-
-} catch (error) {
-console.error('Stripe subscription failed:', error);
-}
+```typescript
+// Initial subscription
+const handleStripePurchase = async (paymentIntent: any, amount: number) => {
+  try {
+    await Attribution.trackEvent("subscription", {
+      subscriptionId: paymentIntent.id,
+      planType: "premium",
+      amount: amount,
+      currency: "USD",
+      interval: "month",
+      subscriptionDate: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Payment error:", error);
+  }
 };
 
-#### RevenueCat
+// Status changes (in your backend webhook handler)
+app.post("/stripe-webhook", async (req, res) => {
+  const event = req.body;
 
-import Purchases from 'react-native-purchases';
-import Attribution from '@reddimon/react-native-attribution';
-import { Platform } from 'react-native';
-
-const handleRevenueCatPurchase = async () => {
-try {
-const subscriptionPackage = {
-identifier: 'premium_monthly',
-packageType: 'MONTHLY',
-product: {
-identifier: 'premium_monthly',
-price: 9.99,
-currencyCode: 'USD'
-},
-offeringIdentifier: 'default',
-presentedOfferingContext: null
-};
-
-    const purchaseResult = await Purchases.purchasePackage(subscriptionPackage);
-
-    if (purchaseResult.customerInfo.entitlements.active.premium) {
-      // Track subscription with Attribution SDK
-      await Attribution.trackEvent('subscription', {
-        subscriptionId: purchaseResult.customerInfo.originalAppUserId,
-        planType: 'premium',
-        amount: subscriptionPackage.product.price,
-        currency: subscriptionPackage.product.currencyCode,
-        platform: Platform.OS,
-        osVersion: Platform.Version
-      });
-    }
-
-} catch (error) {
-console.error('RevenueCat purchase failed:', error);
-}
-};
-
-#### In-App Purchases
-
-import RNIap from 'react-native-iap';
-import Attribution from '@reddimon/react-native-attribution';
-import { Platform } from 'react-native';
-
-const handlePurchase = async () => {
-try {
-const purchase = await RNIap.requestPurchase('premium_sub');
-if (purchase.purchaseStateAndroid === 'PURCHASED' || purchase.transactionReceipt) {
-// Track subscription with Attribution SDK
-await Attribution.trackEvent('subscription', {
-subscriptionId: purchase.transactionId,
-planType: 'premium',
-amount: purchase.price,
-currency: purchase.currency,
-platform: Platform.OS,
-osVersion: Platform.Version
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object;
+    // Call your app's function to track status change
+    await Attribution.trackEvent("subscription", {
+      subscriptionId: subscription.id,
+      status: subscription.status, // 'active', 'cancelled', 'past_due'
+      updateDate: new Date().toISOString(),
+    });
+  }
 });
-}
-} catch (error) {
-console.error('Purchase failed:', error);
-}
+```
+
+### 3. In-App Purchases Integration
+
+```typescript
+// Initial purchase
+const handleIAPPurchase = async (purchase: any) => {
+  try {
+    await Attribution.trackEvent("subscription", {
+      subscriptionId:
+        Platform.OS === "ios"
+          ? purchase.transactionId // iOS transaction ID
+          : purchase.purchaseToken, // Android purchase token
+      planType: purchase.productId,
+      amount: purchase.amount,
+      currency: purchase.currency,
+      interval: purchase.subscriptionPeriod,
+      platform: Platform.OS, // ios/android
+      store: Platform.OS === "ios" ? "App Store" : "Play Store",
+      subscriptionDate: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("IAP error:", error);
+  }
 };
+
+// Status changes
+RNIap.purchaseUpdatedListener((purchase) => {
+  if (Platform.OS === "ios") {
+    // iOS
+    if (purchase.transactionId === null) {
+      // Cancelled
+      handleSubscriptionChange(purchase, "cancelled");
+    }
+  } else {
+    // Android
+    if (!purchase.isAcknowledgedAndroid) {
+      // Cancelled/Expired
+      handleSubscriptionChange(purchase, "cancelled");
+    }
+  }
+});
+```
+
+### Common Status Change Handler
+
+```typescript
+const handleSubscriptionChange = async (subscription: any, status: string) => {
+  await Attribution.trackEvent("subscription", {
+    subscriptionId: subscription.id,
+    status: status, // 'active', 'cancelled', 'expired'
+    updateDate: new Date().toISOString(),
+  });
+};
+```
+
+## Important Notes
+
+1. **RevenueCat**: Status changes are handled automatically through the listener.
+
+2. **Stripe**:
+
+   - You must set up webhooks in your Stripe dashboard
+   - Handle subscription updates in your backend
+   - Call Attribution.trackEvent from your webhook handler
+
+3. **In-App Purchases**:
+   - Status changes are handled through RNIap listeners
+   - Different handling for iOS and Android
+   - No backend webhook required
 
 The SDK works with any payment provider - just call `trackEvent` after a successful subscription with the relevant details.
 
@@ -280,12 +402,17 @@ The SDK works with any payment provider - just call `trackEvent` after a success
 
 ### Test Deep Links
 
-Android:
-bash
-adb shell am start -W -a android.intent.action.VIEW -d "yourapp://attribution?code=test123" com.yourapp
+**Android**:
 
-iOS:
-xcrun simctl openurl booted "yourapp://attribution?code=test123"
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "https://reddimon.com/attribution?code=test123" com.yourapp.id
+```
+
+**iOS Simulator**:
+
+```bash
+xcrun simctl openurl booted "https://reddimon.com/attribution?code=test123"
+```
 
 ## Troubleshooting
 
@@ -294,6 +421,7 @@ xcrun simctl openurl booted "yourapp://attribution?code=test123"
 1. Verify Associated Domains is enabled in Apple Developer Portal
 2. Check Xcode capabilities are properly configured
 3. Verify Info.plist contains required entries
+4. Ensure pods are installed: `cd ios && pod install && cd ..`
 
 ### Android Issues
 
