@@ -1,44 +1,20 @@
 # Changelog
 
-## [1.1.2] - 2025-02-02
+## [1.1.4] - 2025-02-03
 
 ### Changed
 
-- Updated AttributionConfig type to make publisherId optional
+- Updated to @reddimon/react-native-attribution@1.1.4
+- Removed publisherId requirement
+- Simplified configuration interface
+- Synchronized versioning with React Native package
+
+### Fixed
+
+- Fixed type definitions to match React Native CLI
 - Improved initialization configuration
-- Enhanced TypeScript types
+- Updated dependencies to latest versions
 
-### Fixed
-
-- Fixed type error in Attribution.initialize()
-- Resolved publisherId requirement issue
-- Updated package dependencies
-
-## [1.1.1] - 2025-02-02
-
-### Added
-
-- Comprehensive subscription tracking support
-  - RevenueCat integration
-  - Stripe payments
-  - In-App Purchases
-- Enhanced documentation with code examples
-- Subscription status change tracking
-- TypeScript examples for all payment providers
-
-### Changed
-
-- Updated README with modern layout and examples
-- Improved configuration documentation
-- Better TypeScript types and interfaces
-- Enhanced error handling for subscriptions
-
-### Fixed
-
-- Installation tracking improvements
-- Deep linking handling
-- Configuration in app.json
-
-## [1.1.0] - 2025-02-03
+## [1.1.3] - 2025-02-03
 
 Previous release notes...

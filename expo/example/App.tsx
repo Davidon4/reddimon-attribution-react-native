@@ -10,8 +10,8 @@ export default function App() {
       try {
         // 1. SDK is ready
         await Attribution.initialize({
-          apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
-          appId: 'com.yourapp.id', // ID for single platform
+          apiKey: 'YOUR_API_KEY',
+          appId: 'com.yourapp.id',
           baseUrl: 'https://reddimon.com'
         });
 
