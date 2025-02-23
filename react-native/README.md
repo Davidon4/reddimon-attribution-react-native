@@ -152,7 +152,7 @@ const initialize = async () => {
 await Attribution.initialize({
 appId: '0123456789', // ID for single platform
 apiKey: 'YOUR_API_KEY', // From Reddimon dashboard
-baseUrl: 'https://api.reddimon.com'
+baseUrl: 'https://reddimon.com'
 });
 
 //OR if using multiple platforms
